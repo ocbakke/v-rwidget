@@ -1,19 +1,26 @@
+<!--
+meta:
+  title: "Værrigg Sarpsborg Arbeiderblad"
+  newspaper: "Sarpsborg Arbeiderblad"
+  author_full_name: "Journalist"
+  created_date: "2026-03-13"
+  expires_date: "2026-04-13"
+  source: "Meteorologisk institutt (Yr/Frost)"
+  risks: "Krever at GitHub Actions bytter ut {{FROST_ID}} og {{FROST_SECRET}} for at Frost API skal fungere. Hvis ikke faller den tilbake på Yr Locationforecast."
+  responsibility: "Ansvarlig redaktør/avisa er ansvarlig for publisert redaksjonell kode."
+-->
 <!DOCTYPE html>
 <html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sarpsborg Værrigg</title>
-    <!-- Tailwind CSS for styling (raskt og responsivt) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide ikoner for stilrene værsymboler -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Litt ekstra styling for animasjoner */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin 3s linear infinite; }
         
-        /* Gjør at utbrettingsmenyen glir pent */
         .forecast-dropdown {
             display: grid;
             grid-template-rows: 0fr;
@@ -25,52 +32,57 @@
         .forecast-inner {
             overflow: hidden;
         }
+        
+        /* Skjul scrollbar men behold funksjonalitet */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 overflow-hidden">
+<body class="bg-transparent flex items-center justify-center min-h-screen p-0 m-0 w-full overflow-hidden font-sans">
 
-    <!-- Selve Værriggen start -->
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden font-sans">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 w-full max-w-md overflow-hidden">
         
-        <!-- Topptekst med SA-logo -->
-        <div class="bg-white border-b-4 border-[#e3000f] px-6 py-4">
+        <!-- Topptekst -->
+        <div class="bg-white border-b-4 border-[#e3000f] px-5 py-4">
             <div class="flex justify-between items-center">
-                <!-- Fallback-logo i SVG -->
-                <img src="sa.svg" alt="Sarpsborg Arbeiderblad" class="h-9" onerror="this.outerHTML='<svg viewBox=\'0 0 80 40\' class=\'h-9\' xmlns=\'http://www.w3.org/2000/svg\'><text x=\'0\' y=\'32\' font-family=\'Georgia, serif\' font-weight=\'900\' font-size=\'38\' fill=\'#e3000f\'>S</text><text x=\'24\' y=\'32\' font-family=\'Georgia, serif\' font-weight=\'900\' font-size=\'44\' fill=\'#e3000f\'>a</text><circle cx=\'62\' cy=\'30\' r=\'5\' fill=\'#1e293b\'/></svg>'">
+                <!-- Fallback SA-logo -->
+                <svg viewBox='0 0 80 40' class='h-8' aria-label="Sarpsborg Arbeiderblad logo" role="img" xmlns='http://www.w3.org/2000/svg'>
+                    <text x='0' y='32' font-family='Georgia, serif' font-weight='900' font-size='38' fill='#e3000f'>S</text>
+                    <text x='24' y='32' font-family='Georgia, serif' font-weight='900' font-size='44' fill='#e3000f'>a</text>
+                    <circle cx='62' cy='30' r='5' fill='#1e293b'/>
+                </svg>
                 
                 <div class="flex items-center text-[#e3000f]">
-                    <i data-lucide="cloud-sun" class="w-5 h-5 mr-1.5"></i>
-                    <h2 class="text-sm font-bold tracking-wider text-gray-800 uppercase">Været akkurat nå</h2>
+                    <i data-lucide="cloud-sun" class="w-5 h-5 mr-1.5" aria-hidden="true"></i>
+                    <h2 class="text-xs font-bold tracking-wider text-gray-800 uppercase">Været nå</h2>
                 </div>
             </div>
-            <p class="text-gray-500 text-xs mt-1.5 font-medium" id="time-display">Henter lokasjoner...</p>
+            <p class="text-gray-500 text-xs mt-2 font-medium" id="time-display">Henter værdata...</p>
         </div>
 
-        <!-- Hovedinnhold (Laster) -->
+        <!-- Laster-status -->
         <div id="loading-state" class="p-8 text-center text-gray-500">
             <i data-lucide="loader-2" class="w-8 h-8 mx-auto animate-spin-slow mb-3 text-[#e3000f]"></i>
-            <p>Henter ferske værdata for ulike områder...</p>
+            <p class="text-sm">Henter ferske målinger for Sarpsborg...</p>
         </div>
 
-        <!-- Liste med områder (Data) - Skjult som standard -->
-        <div id="weather-list" class="hidden flex flex-col divide-y divide-gray-100">
+        <!-- Hovedinnhold (Data) -->
+        <div id="weather-list" class="hidden flex flex-col divide-y divide-gray-100 w-full">
             <!-- Innholdet genereres dynamisk av JavaScript -->
         </div>
 
-        <!-- Kildehenvisning (Påkrevd av Yr/MET) -->
-        <div class="px-6 py-3 bg-gray-50 text-xs text-gray-400 text-center border-t border-gray-200">
+        <!-- Kildehenvisning -->
+        <div class="px-5 py-3 bg-gray-50 text-[10px] text-gray-500 text-center border-t border-gray-200">
             Værvarsel fra <a href="https://www.yr.no/nb/værvarsel/daglig-tabell/1-105152/Norge/Østfold/Sarpsborg/Sarpsborg" target="_blank" class="text-[#e3000f] font-medium hover:underline">Yr</a>, levert av Meteorologisk institutt og NRK.
         </div>
     </div>
-    <!-- Selve Værriggen slutt -->
 
     <script>
-        // Initialiserer ikonene
         lucide.createIcons();
 
-        // Disse verdiene byttes automatisk ut av GitHub Actions når siden publiseres
-        const frostId = '{{FROST_ID}}';
-        const frostSecret = '{{FROST_SECRET}}';
+        // Disse byttes automatisk ut av GitHub Actions
+        const frostId = '{{FROST-ID}}';
+        const frostSecret = '{{FROST-SECRET}}';
 
         // Fysiske målestasjoner
         const stations = [
@@ -80,24 +92,24 @@
             { id: 'SN3200', name: 'Baterød', lat: 59.3072, lon: 11.1338 }
         ];
 
-        // --- SMARTEMBED LOGIKK ---
+        // Auto-resize for Smartembed
         function sendHeightToParent() {
-            // Finner total høyde på innholdet og sender det til avissiden
+            if (window.self === window.top) return;
             const height = document.body.scrollHeight;
             window.parent.postMessage({ type: 'resize', height: height }, '*');
+        }
+        window.addEventListener('load', sendHeightToParent);
+        window.addEventListener('resize', sendHeightToParent);
+        if ("ResizeObserver" in window) {
+            new ResizeObserver(sendHeightToParent).observe(document.body);
         }
 
         function triggerResize() {
             sendHeightToParent();
-            // Animasjonen tar litt tid (0.3s), så vi sender høyden en gang til etter den er ferdig
             setTimeout(sendHeightToParent, 350); 
         }
-        
-        window.addEventListener('load', sendHeightToParent);
-        window.addEventListener('resize', sendHeightToParent);
-        // -------------------------
 
-        // Hjelpefunksjon for å oversette Yr-symboler til våre ikoner
+        // Funksjon for å oversette Yr-symboler til Lucide-ikoner
         function getIconFromSymbol(symbolCode) {
             if (!symbolCode) return 'cloud';
             const base = symbolCode.split('_')[0];
@@ -109,28 +121,29 @@
             return 'cloud';
         }
 
-        // Funksjon for å åpne/lukke varselet (kalles når man klikker på raden)
+        // Funksjon for å åpne/lukke varselet
         window.toggleForecast = function(id) {
             const dropdown = document.getElementById(`forecast-${id}`);
             const chevron = document.getElementById(`chevron-${id}`);
+            const button = document.getElementById(`btn-${id}`);
             
-            if (dropdown.classList.contains('open')) {
+            const isOpen = dropdown.classList.contains('open');
+            
+            if (isOpen) {
                 dropdown.classList.remove('open');
                 chevron.classList.remove('rotate-180');
+                button.setAttribute('aria-expanded', 'false');
             } else {
                 dropdown.classList.add('open');
                 chevron.classList.add('rotate-180');
+                button.setAttribute('aria-expanded', 'true');
             }
-            // NYTT: Be iframen om å oppdatere høyden sin når vi bretter ut!
             triggerResize();
         };
 
         async function fetchAllWeatherData() {
             try {
                 const weatherListEl = document.getElementById('weather-list');
-                weatherListEl.innerHTML = ''; // Tømmer listen
-
-                // Henter data for alle stasjoner parallelt
                 const fetchPromises = stations.map(async (station) => {
                     let temp = '--';
                     let wind = '--';
@@ -138,7 +151,7 @@
                     let icon = 'cloud';
                     let forecastHtml = '';
 
-                    // FORSØK 1: Hent Locationforecast (brukes til regn og timesvarsel)
+                    // 1: Hent Locationforecast (brukes til regn og timesvarsel)
                     try {
                         const fallbackUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${station.lat}&lon=${station.lon}`;
                         const fallbackResponse = await fetch(fallbackUrl);
@@ -148,16 +161,16 @@
                             const timeseries = fallbackData.properties.timeseries;
                             const currentData = timeseries[0].data;
                             
-                            // Setter basisverdier
                             if (currentData.instant.details.air_temperature !== undefined) temp = currentData.instant.details.air_temperature.toFixed(1);
                             if (currentData.instant.details.wind_speed !== undefined) wind = currentData.instant.details.wind_speed.toFixed(1);
-                            if (currentData.next_1_hours.details.precipitation_amount !== undefined) precip = currentData.next_1_hours.details.precipitation_amount.toFixed(1);
+                            if (currentData.next_1_hours && currentData.next_1_hours.details.precipitation_amount !== undefined) {
+                                precip = currentData.next_1_hours.details.precipitation_amount.toFixed(1);
+                            }
                             
-                            icon = getIconFromSymbol(currentData.next_1_hours.summary.symbol_code);
+                            icon = getIconFromSymbol(currentData.next_1_hours ? currentData.next_1_hours.summary.symbol_code : '');
 
-                            // Bygger fremtidsvarselet (de neste 5 timene)
+                            // Bygger fremtidsvarselet (neste 5 timer)
                             let upcomingHoursHtml = '';
-                            // Vi starter på index 1 (neste time) og henter 5 timer frem
                             for(let i = 1; i <= 5; i++) {
                                 if(timeseries[i]) {
                                     const tData = timeseries[i].data;
@@ -168,26 +181,25 @@
                                     const fIcon = getIconFromSymbol(fSym);
 
                                     upcomingHoursHtml += `
-                                        <div class="flex flex-col items-center justify-center p-2 min-w-[60px]">
-                                            <span class="text-xs text-gray-500 mb-1.5">${hourStr}</span>
-                                            <i data-lucide="${fIcon}" class="w-6 h-6 text-[#e3000f] mb-1.5"></i>
+                                        <div class="flex flex-col items-center justify-center p-2 min-w-[55px]">
+                                            <span class="text-[10px] text-gray-500 mb-1 font-medium">${hourStr}</span>
+                                            <i data-lucide="${fIcon}" class="w-5 h-5 text-[#e3000f] mb-1"></i>
                                             <span class="text-sm font-bold text-gray-800">${fTemp}°</span>
                                         </div>
                                     `;
                                 }
                             }
-                            forecastHtml = `<div class="flex justify-between overflow-x-auto no-scrollbar">${upcomingHoursHtml}</div>`;
+                            forecastHtml = upcomingHoursHtml;
                         }
                     } catch (fallbackError) {
-                        console.error(`Klarte ikke hente varsel for ${station.name}:`, fallbackError);
+                        console.error(`Klarte ikke hente Yr-varsel for ${station.name}:`, fallbackError);
                         icon = 'alert-triangle';
                         forecastHtml = '<p class="text-xs text-red-500">Kunne ikke laste timevarsel.</p>';
                     }
 
-                    // FORSØK 2: Oppgrader med fysisk måling fra Frost API for selve hovedvisningen
+                    // 2: Hent ferske Frost-observasjoner (overskriver Yr for temp/vind hvis de finnes)
                     try {
                         const apiUrl = `https://frost.met.no/observations/v0.jsonld?sources=${station.id}&referencetime=latest&elements=air_temperature,wind_speed`;
-                        // Setter sammen ID og Secret for Basic Auth
                         const authString = btoa(frostId + ':' + frostSecret);
                         const response = await fetch(apiUrl, {
                             headers: { 'Authorization': 'Basic ' + authString }
@@ -206,78 +218,75 @@
                             }
                         }
                     } catch (error) {
-                        console.warn(`Kunne ikke hente Frost-data for ${station.name}, beholder varselet.`);
+                        console.warn(`Kunne ikke hente Frost-data (sikkert pga manglende nøkkel i forhåndsvisning), bruker Yr-tall for ${station.name}.`);
                     }
 
                     return { ...station, temp, wind, precip, icon, forecastHtml };
                 });
 
                 const results = await Promise.all(fetchPromises);
+                let html = '';
 
-                // Bygger HTML for hele listen
                 results.forEach(res => {
-                    const rowHtml = `
+                    html += `
                         <div class="flex flex-col w-full bg-white group">
-                            <!-- Hovedrad (Klikkbar) -->
-                            <button onclick="toggleForecast('${res.id}')" class="w-full flex items-center justify-between p-4 hover:bg-gray-50 focus:bg-gray-50 transition-colors focus:outline-none cursor-pointer">
+                            <button id="btn-${res.id}" aria-expanded="false" aria-controls="forecast-${res.id}" onclick="toggleForecast('${res.id}')" class="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 focus:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#e3000f] cursor-pointer">
+                                
                                 <div class="flex items-center space-x-4">
                                     <div class="text-[#e3000f] flex-shrink-0">
-                                        <i data-lucide="${res.icon}" class="w-8 h-8"></i>
+                                        <i data-lucide="${res.icon}" class="w-7 h-7"></i>
                                     </div>
                                     <div class="text-left">
-                                        <h3 class="font-bold text-gray-800 text-lg group-hover:text-[#e3000f] transition-colors">${res.name}</h3>
+                                        <h3 class="font-bold text-gray-800 text-sm md:text-base">${res.name}</h3>
                                         <div class="flex flex-col sm:flex-row text-xs text-gray-500 sm:space-x-3 mt-0.5 space-y-1 sm:space-y-0">
-                                            <span class="flex items-center"><i data-lucide="wind" class="w-3 h-3 mr-1"></i> ${res.wind} m/s</span>
-                                            <span class="flex items-center"><i data-lucide="umbrella" class="w-3 h-3 mr-1"></i> ${res.precip} mm</span>
+                                            <span class="flex items-center" title="Vindstyrke"><i data-lucide="wind" class="w-3 h-3 mr-1"></i>${res.wind} m/s</span>
+                                            <span class="flex items-center" title="Nedbør neste time"><i data-lucide="droplets" class="w-3 h-3 mr-1"></i>${res.precip} mm</span>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="flex items-center space-x-3">
-                                    <div class="text-2xl font-bold text-gray-800 tracking-tighter">
-                                        ${res.temp}°
-                                    </div>
+                                    <span class="text-2xl font-black text-gray-900">${res.temp}°</span>
                                     <div class="bg-gray-100 rounded-full p-1 group-hover:bg-gray-200 transition-colors">
-                                        <i data-lucide="chevron-down" id="chevron-${res.id}" class="w-4 h-4 text-gray-500 transition-transform duration-300"></i>
+                                        <i id="chevron-${res.id}" data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform duration-300"></i>
                                     </div>
                                 </div>
                             </button>
-                            
-                            <!-- Skjult dropdown med varsel -->
+
                             <div id="forecast-${res.id}" class="forecast-dropdown bg-[#f8f9fa] border-t border-gray-100">
                                 <div class="forecast-inner">
                                     <div class="px-4 py-3">
                                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 pl-2">Varsel neste 5 timer</p>
-                                        ${res.forecastHtml}
+                                        <div class="flex justify-between overflow-x-auto no-scrollbar pb-2">
+                                            ${res.forecastHtml}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     `;
-                    weatherListEl.insertAdjacentHTML('beforeend', rowHtml);
                 });
 
-                // Oppdaterer ikoner i den nye HTMLen
-                lucide.createIcons();
+                weatherListEl.innerHTML = html;
+                lucide.createIcons(); 
 
-                // Skjuler laster og viser listen
+                // Bytt ut laster med data
                 document.getElementById('loading-state').classList.add('hidden');
                 weatherListEl.classList.remove('hidden');
 
-                // Oppdaterer tidspunkt for siste henting
                 const nå = new Date();
                 const tid = nå.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
                 document.getElementById('time-display').innerText = `Sist oppdatert kl. ${tid}`;
 
-                // NYTT: Be iframen om å tilpasse seg når alt er ferdig lastet!
                 triggerResize();
 
             } catch (error) {
                 console.error("Generell feil:", error);
-                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 p-6">Det oppstod en kritisk feil. Prøv igjen senere.</p>`;
+                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 text-sm">Kunne ikke laste værdata akkurat nå. Prøv igjen senere.</p>`;
             }
         }
 
-        // Start prosessen
+        // Kjør i gang!
         fetchAllWeatherData();
     </script>
 </body>
