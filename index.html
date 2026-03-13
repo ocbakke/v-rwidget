@@ -27,7 +27,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 overflow-hidden">
 
     <!-- Selve Værriggen start -->
     <div class="bg-white rounded-2xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden font-sans">
@@ -80,6 +80,23 @@
             { id: 'SN3200', name: 'Baterød', lat: 59.3072, lon: 11.1338 }
         ];
 
+        // --- SMARTEMBED LOGIKK ---
+        function sendHeightToParent() {
+            // Finner total høyde på innholdet og sender det til avissiden
+            const height = document.body.scrollHeight;
+            window.parent.postMessage({ type: 'resize', height: height }, '*');
+        }
+
+        function triggerResize() {
+            sendHeightToParent();
+            // Animasjonen tar litt tid (0.3s), så vi sender høyden en gang til etter den er ferdig
+            setTimeout(sendHeightToParent, 350); 
+        }
+        
+        window.addEventListener('load', sendHeightToParent);
+        window.addEventListener('resize', sendHeightToParent);
+        // -------------------------
+
         // Hjelpefunksjon for å oversette Yr-symboler til våre ikoner
         function getIconFromSymbol(symbolCode) {
             if (!symbolCode) return 'cloud';
@@ -104,6 +121,8 @@
                 dropdown.classList.add('open');
                 chevron.classList.add('rotate-180');
             }
+            // NYTT: Be iframen om å oppdatere høyden sin når vi bretter ut!
+            triggerResize();
         };
 
         async function fetchAllWeatherData() {
@@ -206,57 +225,4 @@
                                         <i data-lucide="${res.icon}" class="w-8 h-8"></i>
                                     </div>
                                     <div class="text-left">
-                                        <h3 class="font-bold text-gray-800 text-lg group-hover:text-[#e3000f] transition-colors">${res.name}</h3>
-                                        <div class="flex flex-col sm:flex-row text-xs text-gray-500 sm:space-x-3 mt-0.5 space-y-1 sm:space-y-0">
-                                            <span class="flex items-center"><i data-lucide="wind" class="w-3 h-3 mr-1"></i> ${res.wind} m/s</span>
-                                            <span class="flex items-center"><i data-lucide="umbrella" class="w-3 h-3 mr-1"></i> ${res.precip} mm</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-3">
-                                    <div class="text-2xl font-bold text-gray-800 tracking-tighter">
-                                        ${res.temp}°
-                                    </div>
-                                    <div class="bg-gray-100 rounded-full p-1 group-hover:bg-gray-200 transition-colors">
-                                        <i data-lucide="chevron-down" id="chevron-${res.id}" class="w-4 h-4 text-gray-500 transition-transform duration-300"></i>
-                                    </div>
-                                </div>
-                            </button>
-                            
-                            <!-- Skjult dropdown med varsel -->
-                            <div id="forecast-${res.id}" class="forecast-dropdown bg-[#f8f9fa] border-t border-gray-100">
-                                <div class="forecast-inner">
-                                    <div class="px-4 py-3">
-                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 pl-2">Varsel neste 5 timer</p>
-                                        ${res.forecastHtml}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    weatherListEl.insertAdjacentHTML('beforeend', rowHtml);
-                });
-
-                // Oppdaterer ikoner i den nye HTMLen
-                lucide.createIcons();
-
-                // Skjuler laster og viser listen
-                document.getElementById('loading-state').classList.add('hidden');
-                weatherListEl.classList.remove('hidden');
-
-                // Oppdaterer tidspunkt for siste henting
-                const nå = new Date();
-                const tid = nå.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
-                document.getElementById('time-display').innerText = `Sist oppdatert kl. ${tid}`;
-
-            } catch (error) {
-                console.error("Generell feil:", error);
-                document.getElementById('loading-state').innerHTML = `<p class="text-red-500 p-6">Det oppstod en kritisk feil. Prøv igjen senere.</p>`;
-            }
-        }
-
-        // Start prosessen
-        fetchAllWeatherData();
-    </script>
-</body>
-</html>
+                                        <h3 class="font
