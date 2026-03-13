@@ -68,8 +68,9 @@
         // Initialiserer ikonene
         lucide.createIcons();
 
-        // DIN FROST API CLIENT ID
-        const frostClientId = '39031427-29d0-4c59-a0b7-eed7467965ed';
+        // Disse verdiene byttes automatisk ut av GitHub Actions når siden publiseres
+        const frostId = '{{FROST_ID}}';
+        const frostSecret = '{{FROST_SECRET}}';
 
         // Fysiske målestasjoner
         const stations = [
@@ -167,8 +168,10 @@
                     // FORSØK 2: Oppgrader med fysisk måling fra Frost API for selve hovedvisningen
                     try {
                         const apiUrl = `https://frost.met.no/observations/v0.jsonld?sources=${station.id}&referencetime=latest&elements=air_temperature,wind_speed`;
+                        // Setter sammen ID og Secret for Basic Auth
+                        const authString = btoa(frostId + ':' + frostSecret);
                         const response = await fetch(apiUrl, {
-                            headers: { 'Authorization': 'Basic ' + btoa(frostClientId + ':') }
+                            headers: { 'Authorization': 'Basic ' + authString }
                         });
 
                         if (response.ok) {
